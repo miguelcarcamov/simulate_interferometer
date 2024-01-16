@@ -123,7 +123,7 @@ antenna_config_path = "antenna_configs/"
 
 
 ```python
-antenna_config_file = antenna_config_path + "vla.c.cfg"
+antenna_config_file = antenna_config_path + "vla.a.cfg"
 ```
 
 
@@ -164,32 +164,6 @@ else:
 
 
 ```python
-fig, ax = plt.subplots(layout='constrained')
-
-ax.plot(enu_coords[0], enu_coords[1], '.k')
-ax.set(
-        aspect=1,
-        xlabel='West-East / m',
-        ylabel='South-North / m'
-)
-#ax.set_aspect('equal')
-```
-
-
-
-
-    [None, Text(0.5, 0, 'West-East / m'), Text(0, 0.5, 'South-North / m')]
-
-
-
-
-    
-![png](simulate_interferometer_files/simulate_interferometer_16_1.png)
-    
-
-
-
-```python
 antenna_ids = np.arange(0, enu_coords.shape[1])
 n_antennas = len(antenna_ids)
 ```
@@ -206,7 +180,42 @@ b_enu = b_enu[:, ~np.eye(b_enu.shape[-1],dtype=bool)]
 ```python
 # We calculate the distance between different pairs of antennas
 abs_b = np.sqrt(np.sum(b_enu**2, axis=0))
+baselines_distance_2d = np.sqrt(np.sum(b_enu[0:2]**2, axis=0))
+max_baseline = np.max(baselines_distance_2d)
+idx_nearest_zero = np.argmin(np.sqrt(np.sum(enu_coords[0:2]**2, axis=0)))
+antenna_nearest_zero = enu_coords[:, idx_nearest_zero]
+farthest_antenna = np.max(np.sqrt(np.sum((enu_coords[0:2] - antenna_nearest_zero[0:2, np.newaxis])**2, axis=0)))
 ```
+
+
+```python
+fig, ax = plt.subplots(layout='constrained')
+
+dish_circle = plt.Circle((antenna_nearest_zero[0]/1000, antenna_nearest_zero[1]/1000), farthest_antenna/1000, facecolor="white", edgecolor='r', alpha=0.25)
+ax.plot(enu_coords[0]/1000, enu_coords[1]/1000, '.k')
+ax.add_patch(dish_circle)
+ax.set(
+        aspect=1,
+        xlabel='West-East / km',
+        ylabel='South-North / km'
+)
+
+#ax.legend(["Antennas", "Dish of {0:0.1f} km".format(max_baseline/1000)], loc="upper right", bbox_to_anchor=(2., 1.03), fancybox=True)
+#ax.set_aspect('equal')
+```
+
+
+
+
+    [None, Text(0.5, 0, 'West-East / km'), Text(0, 0.5, 'South-North / km')]
+
+
+
+
+    
+![png](simulate_interferometer_files/simulate_interferometer_19_1.png)
+    
+
 
 
 ```python
